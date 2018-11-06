@@ -1,0 +1,13 @@
+network:
+    version: 2
+    ethernets:
+        switchports:
+            match: { name: "{{ openvpn_dev }}*" }
+    bridges:
+        br-tap:
+            interfaces: [switchports]
+            addresses: [{{openvpn_bridge.cidr}}]
+            dhcp4: no
+            dhcp6: no
+            parameters:
+                stp: false

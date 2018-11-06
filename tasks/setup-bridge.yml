@@ -1,20 +1,33 @@
 ---
 
 - name: Setup bridge
-  when: openvpn_bridge
+  when: openvpn_bridge and not openvpn_bridge.netplan
   template:
     src: bridge-interface.j2
     dest: "/etc/network/interfaces.d/{{ openvpn_dev }}"
   register: bridge
   tags: [bridge]
 
+- name: Setup bridge via netplan
+  when: openvpn_bridge and openvpn_bridge.netplan
+  template:
+    src: bridge-interface.netplan.j2
+    dest: "/etc/netplan/99-openvpn.yaml"
+  register: bridge
+  tags: [bridge]
+
 - name: Restart networking
   service: name=networking state=restarted
-  when: openvpn_bridge and bridge|changed
+  when: openvpn_bridge and not openvpn_bridge.netplan and bridge|changed
+  tags: [bridge]
+
+- name: Netplan apply
+  when: openvpn_bridge and openvpn_bridge.netplan and bridge|changed
+  command: netplan apply
   tags: [bridge]
 
 - file:
     path: "/etc/network/interfaces.d/{{ openvpn_dev }}"
     state: absent
-  when: not openvpn_bridge
+  when: not openvpn_bridge or openvpn_bridge.netplan
   tags: [bridge]
