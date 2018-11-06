@@ -11,3 +11,10 @@ network:
             dhcp6: no
             parameters:
                 stp: false
+{% if openvpn_bridge and openvpn_bridge.static_routes %}
+            routes:
+{% for route in openvpn_bridge.static_routes %}
+                - to:  {{route.to}}
+                  via: {{route.via}}
+{% endfor %}
+{% endif %}
